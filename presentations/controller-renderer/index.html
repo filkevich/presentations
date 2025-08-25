@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Controller / Renderer Pattern</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		<link rel="stylesheet" href="../../dist/reveal.css">
+		<link rel="stylesheet" href="../../dist/theme/white.css" id="theme">
+		<link rel="stylesheet" href="../../plugin/highlight/zenburn.css" />
+	</head>
+
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+					<h3>Controller / Renderer Pattern</h3>
+
+					<small>In house approach in teams Vader & ChewBacca</small>
+				</section>
+
+				<section>
+					<ul>
+						<h3>Controller / Renderer Pattern</h3>
+
+						<div style="font-size: 30px">
+							<p>- File structure</p>
+							<p>- Examples of code</p>
+							<p>- Pros & Cons</p>
+							<p>- FAQs</p>
+						</div>
+					</ul>
+				</section>
+
+				<section>
+					<section data-auto-animate>
+						<h3>File structure</h3>
+					</section>
+
+					<section data-auto-animate data-background-color="#2e2d2d">
+						<h3>File structure</h3>
+
+						<pre data-id="pre-sturcture">
+							<code class="language-typescript" data-line-numbers data-trim data-noescape>
+								src/
+									components/
+										UserList/
+											UserList.tsx
+											UserList.scss
+											types.ts
+											index.ts
+							</code>
+						</pre>
+					</section>
+
+					<section data-auto-animate data-background-color="#2e2d2d">
+						<h3>File structure</h3>
+
+						<pre data-id="pre-sturcture">
+							<code class="language-typescript" data-line-numbers data-trim data-noescape>
+								src/
+									components/
+										UserList/
+											UserListController.tsx
+											UserListRenderer.tsx
+											UserListRenderer.scss
+											types.ts
+											index.ts
+							</code>
+						</pre>
+					</section>
+
+					<section data-auto-animate data-background-color="#2e2d2d">
+						<h3>File structure</h3>
+
+						<pre data-id="pre-sturcture">
+							<code class="language-typescript" data-line-numbers data-trim data-noescape>
+								src/
+									components/
+										UserList/
+											// Owns data flow & interactions
+											UserListController.tsx
+											UserListRenderer.tsx
+											UserListRenderer.scss
+											types.ts
+											index.ts
+							</code>
+						</pre>
+					</section>
+
+					<section data-auto-animate data-background-color="#2e2d2d">
+						<h3>File structure</h3>
+
+						<pre data-id="pre-sturcture">
+							<code class="language-typescript" data-line-numbers data-trim data-noescape>
+								src/
+									components/
+										UserList/
+											// Owns data flow & interactions
+											UserListController.tsx
+											// Pure UI (dumb component)
+											UserListRenderer.tsx
+											UserListRenderer.scss
+											types.ts
+											index.ts
+							</code>
+						</pre>
+					</section>
+
+					<section data-auto-animate data-background-color="#2e2d2d">
+						<h3>File structure</h3>
+
+						<pre data-id="pre-sturcture">
+							<code class="language-typescript" data-line-numbers data-trim data-noescape>
+								src/
+									components/
+										UserList/
+											// Owns data flow & interactions
+											UserListController.tsx
+											// Pure UI (dumb component)
+											UserListRenderer.tsx
+											// Repeats the name of Renderer
+											UserListRenderer.scss
+											types.ts
+											index.ts
+							</code>
+						</pre>
+					</section>
+				</section>
+
+				<section>
+					<section data-auto-animate>
+						<h3 data-id="heading">Files content</h3>
+					</section>
+
+					<section data-auto-animate data-background-color="#2e2d2d">
+						<h4 style="text-transform: none;" data-id="heading">index.ts</h4>
+						<pre data-id="pre-sturcture">
+							<code style="font-size: 16px" class="language-typescript" data-line-numbers="0|7-10|12-20" data-trim data-noescape>
+								interface User {
+									id: number;
+									name: string;
+									email: string;
+								}
+
+								export interface UserListControllerProps {
+									// Optional initial filter value from parent
+									initialQuery?: string;
+								}
+
+								export interface UserListRendererProps {
+									users: User[];
+									filtered: User[];
+									loading: boolean;
+									error?: string;
+									query: string;
+									onQueryChange: (q: string) => void;
+									onRetry: VoidFunction;
+								}
+							</code>
+						</pre>
+					</section>
+
+					<section data-auto-animate data-background-color="#2e2d2d">
+						<h4 style="text-transform: none;" data-id="heading">UserListRenderer.tsx</h4>
+
+						<pre data-id="pre-sturcture">
+							<code style="font-size: 16px" class="language-typescript" data-line-numbers="0|10-16|18|20-24|26-38|40-66" data-line-numbers data-trim data-noescape>
+								<script type="text/template">
+									import React, { FC } from "react";
+									import { useIntl } from "react-intl";
+									import { match } from "ts-pattern";
+									import { Button, Typography, TextField } from "ui/common";
+									import { messages } from "src/features/Users/messages";
+									import { UserListRendererProps } from "./types";
+									import styles from "./UserListRenderer.scss";
+
+									export const UserListRenderer: FC<UserListRendererProps> = ({
+										users,
+										filtered,
+										loading,
+										error,
+										query,
+										onQueryChange,
+										onRetry,
+									}) => {
+										const { formatMessage } = useIntl();
+
+										if (loading) {
+											return <Typography>
+												{formatMessage(messages.usersLoading)}
+											</Typography>;
+										}
+
+										if (error) {
+											return (
+												<div className={styles.root}>
+													<Typography>
+														{formatMessage(messages.usersError)}
+													</Typography>
+
+													<Button onClick={onRetry}>
+														{formatMessage(messages.usersRetry)}
+													</Button>
+												</div>
+											);
+										}
+
+										return (
+											<div className={styles.root}>
+												<TextField
+													placeholder={formatMessage(messages.usersFilterPlaceholder)}
+													value={query}
+													onChange={(e) => onQueryChange(e.target.value)}
+													aria-label={formatMessage(messages.usersFilterAria)}
+												/>
+
+												{match(filtered.length)
+													.with(0, () => (
+														<Typography>{formatMessage(messages.usersNoResults)}</Typography>
+													))
+													.otherwise(() => (
+														<ul>
+															{filtered.map(({ id, name, email }) => (
+																<li key={id}>
+																	<Typography>
+																		{name} — {email}
+																	</Typography>
+																</li>
+															))}
+														</ul>
+													))}
+											</div>
+										);
+									};
+								</script>
+							</code>
+						</pre>
+					</section>
+
+					<section data-auto-animate data-background-color="#2e2d2d">
+						<h4 style="text-transform: none;" data-id="heading">UserListController.tsx</h4>
+
+						<pre data-id="pre-sturcture">
+							<code style="font-size: 16px" class="language-typescript" data-line-numbers="0|10-15|17-21|23-33" data-line-numbers data-trim data-noescape>
+								<script type="text/template">
+									import React, { FC, useMemo, useState } from "react";
+									import { useQuery } from "@tanstack/react-query";
+									import { getUsers } from "src/features/Users/api/users";
+									import { UserListRenderer } from "./UserListRenderer";
+									import { UserListControllerProps } from "./types";
+
+									export const UserListController: FC<UserListControllerProps> = ({
+										initialQuery = "",
+									}) => {
+										const [query, setQuery] = useState(initialQuery);
+
+										const { data, isLoading, error, refetch, isRefetching } = useQuery({
+											queryKey: ["users"],
+											queryFn: getUsers,
+										});
+
+										const users = data ?? [];
+										const filtered = useMemo(() => {
+											const filter = query.toLowerCase();
+											return users.filter(({ name }) => name.toLowerCase().includes(filter));
+										}, [users, query]);
+
+										return (
+											<UserListRenderer
+												users={users}
+												filtered={filtered}
+												loading={isLoading || isRefetching}
+												error={error?.message}
+												query={query}
+												onQueryChange={setQuery}
+												onRetry={refetch}
+											/>
+										);
+									};
+								</script>
+							</code>
+						</pre>
+					</section>
+				</section>
+
+				<section>
+					<section>
+							<h3>Pros & Cons</h3>
+					</section>
+
+					<section>
+						<ul>
+							<h4>Pros</h4>
+							<div style="font-size: 30px; width: 750px">
+								<p>- Clear separation: business logic vs. presentation</p>
+								<p>- Consistent structure across the codebase</p>
+							</div>
+						</ul>
+					</section>
+
+					<section>
+						<ul>
+							<h4>Cons</h4>
+							<div style="font-size: 30px; width: 750px">
+								<p>- More files for very small components</p>
+							</div>
+						</ul>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h3>FAQs</h3>
+					</section>
+
+					<section>
+						<h4>Can renderer have local state?</h4>
+						<div style="font-size: 30px;">
+							No. Even for view-only concerns, keep state in the Controller.
+						</div>
+					</section>
+
+					<section>
+						<h4>Can we use Intl hooks in the Renderer?</h4>
+						<div style="font-size: 30px;">
+							Yes — use `useIntl()` for messages and formatting.
+						</div>
+					</section>
+
+					<section>
+						<h4>Can we skip Controller for UI-only components?</h4>
+						<div style="font-size: 30px;">
+							If a component is truly dumb and has no controller, you don’t need to split.
+						</div>
+						<div style="font-size: 30px;">
+							However, keep the naming convention (ComponentNameRenderer) so adding a Controller later is frictionless.
+						</div>
+					</section>
+				</section>
+			</div>
+		</div>
+
+		<script src="../../dist/reveal.js"></script>
+		<script src="../../plugin/highlight/highlight.js"></script>
+		<script src="../../plugin/markdown/markdown.js"></script>
+		<script src="../../plugin/search/search.js"></script>
+		<script src="../../plugin/zoom/zoom.js"></script>
+		<script>
+			Reveal.initialize({
+				hash: true,
+				plugins: [
+					RevealHighlight,
+					RevealMarkdown,
+					RevealSearch,
+					RevealZoom,
+				]
+			});
+		</script>
+	</body>
+</html>
