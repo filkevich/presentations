@@ -23,7 +23,8 @@
 						<h3>Controller / Renderer Pattern</h3>
 
 						<div style="font-size: 30px">
-							<p>- File structure</p>
+							<p>- Reason</p>
+							<p>- Files structure</p>
 							<p>- Examples of code</p>
 							<p>- Pros & Cons</p>
 							<p>- FAQs</p>
@@ -32,12 +33,22 @@
 				</section>
 
 				<section>
+					<ul>
+						<h3>Reason</h3>
+
+						<div style="font-size: 30px">
+							<p>Clearly separate the logic from the presentation.</p>
+						</div>
+					</ul>
+				</section>
+
+				<section>
 					<section data-auto-animate>
-						<h3>File structure</h3>
+						<h3>Files structure</h3>
 					</section>
 
 					<section data-auto-animate data-background-color="#2e2d2d">
-						<h3>File structure</h3>
+						<h3>Files structure</h3>
 
 						<pre data-id="pre-sturcture">
 							<code class="language-typescript" data-line-numbers data-trim data-noescape>
@@ -53,7 +64,7 @@
 					</section>
 
 					<section data-auto-animate data-background-color="#2e2d2d">
-						<h3>File structure</h3>
+						<h3>Files structure</h3>
 
 						<pre data-id="pre-sturcture">
 							<code class="language-typescript" data-line-numbers data-trim data-noescape>
@@ -70,7 +81,7 @@
 					</section>
 
 					<section data-auto-animate data-background-color="#2e2d2d">
-						<h3>File structure</h3>
+						<h3>Files structure</h3>
 
 						<pre data-id="pre-sturcture">
 							<code class="language-typescript" data-line-numbers data-trim data-noescape>
@@ -88,7 +99,7 @@
 					</section>
 
 					<section data-auto-animate data-background-color="#2e2d2d">
-						<h3>File structure</h3>
+						<h3>Files structure</h3>
 
 						<pre data-id="pre-sturcture">
 							<code class="language-typescript" data-line-numbers data-trim data-noescape>
@@ -107,7 +118,7 @@
 					</section>
 
 					<section data-auto-animate data-background-color="#2e2d2d">
-						<h3>File structure</h3>
+						<h3>Files structure</h3>
 
 						<pre data-id="pre-sturcture">
 							<code class="language-typescript" data-line-numbers data-trim data-noescape>
@@ -133,29 +144,48 @@
 					</section>
 
 					<section data-auto-animate data-background-color="#2e2d2d">
-						<h4 style="text-transform: none;" data-id="heading">index.ts</h4>
+						<h4 style="text-transform: none;" data-id="heading">UserListController.tsx</h4>
+
 						<pre data-id="pre-sturcture">
-							<code style="font-size: 16px" class="language-typescript" data-line-numbers="0|7-10|12-20" data-trim data-noescape>
-								interface User {
-									id: number;
-									name: string;
-									email: string;
-								}
+							<code style="font-size: 16px" class="language-typescript" data-line-numbers="0|10-15|17-21|23-33|36" data-line-numbers data-trim data-noescape>
+								<script type="text/template">
+									import React, { FC, useMemo, useState } from "react";
+									import { useQuery } from "@tanstack/react-query";
+									import { getUsers } from "src/features/Users/api/users";
+									import UserListRenderer from "./UserListRenderer";
+									import { UserListControllerProps } from "./types";
 
-								export interface UserListControllerProps {
-									// Optional initial filter value from parent
-									initialQuery?: string;
-								}
+									const UserListController: FC<UserListControllerProps> = ({
+										initialQuery = "",
+									}) => {
+										const [query, setQuery] = useState(initialQuery);
 
-								export interface UserListRendererProps {
-									users: User[];
-									filtered: User[];
-									loading: boolean;
-									error?: string;
-									query: string;
-									onQueryChange: (q: string) => void;
-									onRetry: VoidFunction;
-								}
+										const { data, isLoading, error, refetch } = useQuery({
+											queryKey: ["users"],
+											queryFn: getUsers,
+										});
+
+										const users = data ?? [];
+										const filtered = useMemo(() => {
+											const filter = query.toLowerCase();
+											return users.filter(({ name }) => name.toLowerCase().includes(filter));
+										}, [users, query]);
+
+										return (
+											<UserListRenderer
+												users={users}
+												filtered={filtered}
+												loading={isLoading}
+												error={error?.message}
+												query={query}
+												onQueryChange={setQuery}
+												onRetry={refetch}
+											/>
+										);
+									};
+
+									export default UserListController;
+								</script>
 							</code>
 						</pre>
 					</section>
@@ -164,7 +194,7 @@
 						<h4 style="text-transform: none;" data-id="heading">UserListRenderer.tsx</h4>
 
 						<pre data-id="pre-sturcture">
-							<code style="font-size: 16px" class="language-typescript" data-line-numbers="0|10-16|18|20-24|26-38|40-66" data-line-numbers data-trim data-noescape>
+							<code style="font-size: 16px" class="language-typescript" data-line-numbers="0|10-16|18|20-24|26-38|40-66|68" data-line-numbers data-trim data-noescape>
 								<script type="text/template">
 									import React, { FC } from "react";
 									import { useIntl } from "react-intl";
@@ -174,7 +204,7 @@
 									import { UserListRendererProps } from "./types";
 									import styles from "./UserListRenderer.scss";
 
-									export const UserListRenderer: FC<UserListRendererProps> = ({
+									const UserListRenderer: FC<UserListRendererProps> = ({
 										users,
 										filtered,
 										loading,
@@ -232,52 +262,47 @@
 											</div>
 										);
 									};
+
+									export default UserListRenderer;
 								</script>
 							</code>
 						</pre>
 					</section>
 
 					<section data-auto-animate data-background-color="#2e2d2d">
-						<h4 style="text-transform: none;" data-id="heading">UserListController.tsx</h4>
-
+						<h4 style="text-transform: none;" data-id="heading">types.ts</h4>
 						<pre data-id="pre-sturcture">
-							<code style="font-size: 16px" class="language-typescript" data-line-numbers="0|10-15|17-21|23-33" data-line-numbers data-trim data-noescape>
-								<script type="text/template">
-									import React, { FC, useMemo, useState } from "react";
-									import { useQuery } from "@tanstack/react-query";
-									import { getUsers } from "src/features/Users/api/users";
-									import { UserListRenderer } from "./UserListRenderer";
-									import { UserListControllerProps } from "./types";
+							<code style="font-size: 16px" class="language-typescript" data-line-numbers="0|7-10|12-20" data-trim data-noescape>
+								interface User {
+									id: number;
+									name: string;
+									email: string;
+								}
 
-									export const UserListController: FC<UserListControllerProps> = ({
-										initialQuery = "",
-									}) => {
-										const [query, setQuery] = useState(initialQuery);
+								export interface UserListControllerProps {
+									// Optional initial filter value from parent
+									initialQuery?: string;
+								}
 
-										const { data, isLoading, error, refetch, isRefetching } = useQuery({
-											queryKey: ["users"],
-											queryFn: getUsers,
-										});
+								export interface UserListRendererProps {
+									users: User[];
+									filtered: User[];
+									loading: boolean;
+									error?: string;
+									query: string;
+									onQueryChange: (q: string) => void;
+									onRetry: VoidFunction;
+								}
+							</code>
+						</pre>
+					</section>
 
-										const users = data ?? [];
-										const filtered = useMemo(() => {
-											const filter = query.toLowerCase();
-											return users.filter(({ name }) => name.toLowerCase().includes(filter));
-										}, [users, query]);
-
-										return (
-											<UserListRenderer
-												users={users}
-												filtered={filtered}
-												loading={isLoading || isRefetching}
-												error={error?.message}
-												query={query}
-												onQueryChange={setQuery}
-												onRetry={refetch}
-											/>
-										);
-									};
-								</script>
+					<section data-auto-animate data-background-color="#2e2d2d">
+						<h4 style="text-transform: none;" data-id="heading">index.ts</h4>
+						<pre data-id="pre-sturcture">
+							<code style="font-size: 16px" class="language-typescript" data-line-numbers data-trim data-noescape>
+								export { default as UserList } from "./UserListController";
+								export type { UserListControllerProps as UserListProps } from "./types"
 							</code>
 						</pre>
 					</section>
@@ -337,6 +362,12 @@
 						</div>
 					</section>
 				</section>
+
+					<section>
+						<ul>
+							<h4>Thanks for your attention 😊</h4>
+						</ul>
+					</section>
 			</div>
 		</div>
 
